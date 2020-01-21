@@ -33,6 +33,7 @@ class MessageModel(Model):
     viewed = BooleanField(default=False)
 
 
+
     def __str__(self):
         return str(self.id)
 
