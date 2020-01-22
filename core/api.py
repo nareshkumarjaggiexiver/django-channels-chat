@@ -7,7 +7,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.authentication import SessionAuthentication
 
 from chat import settings
-from core.serializers import MessageModelSerializer, UserModelSerializer
+from core.serializers import MessageModelSerializer, ChatUserModelSerializer
 from core.models import MessageModel
 
 
@@ -42,8 +42,8 @@ class MessageModelViewSet(ModelViewSet):
         target = self.request.query_params.get('target', None)
         if target is not None:
             self.queryset = self.queryset.filter(
-                Q(recipient=request.user, user__username=target) |
-                Q(recipient__username=target, user=request.user))
+                Q(recipient=request.user, user__id=target) |
+                Q(recipient__id=target, user=request.user))
         return super(MessageModelViewSet, self).list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
@@ -55,13 +55,13 @@ class MessageModelViewSet(ModelViewSet):
         return Response(serializer.data)
 
 
-class UserModelViewSet(ModelViewSet):
+class ChatUserModelViewSet(ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserModelSerializer
+    serializer_class = ChatUserModelSerializer
     allowed_methods = ('GET', 'HEAD', 'OPTIONS')
     pagination_class = None  # Get all user
 
     def list(self, request, *args, **kwargs):
         # Get all users except yourself
         self.queryset = self.queryset.exclude(id=request.user.id)
-        return super(UserModelViewSet, self).list(request, *args, **kwargs)
+        return super(ChatUserModelViewSet, self).list(request, *args, **kwargs)

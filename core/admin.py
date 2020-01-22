@@ -1,5 +1,5 @@
 from django.contrib.admin import ModelAdmin, site
-from core.models import MessageModel
+from core.models import MessageModel, Status
 
 
 class MessageModelAdmin(ModelAdmin):
@@ -12,3 +12,4 @@ class MessageModelAdmin(ModelAdmin):
 
 
 site.register(MessageModel, MessageModelAdmin)
+site.register(Status)

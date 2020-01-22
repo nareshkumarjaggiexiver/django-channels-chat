@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from core.models import MessageModel
-from rest_framework.serializers import ModelSerializer, CharField
+from rest_framework.serializers import ModelSerializer, CharField, SerializerMethodField
 
 
 class MessageModelSerializer(ModelSerializer):
@@ -20,10 +20,23 @@ class MessageModelSerializer(ModelSerializer):
 
     class Meta:
         model = MessageModel
-        fields = ('id', 'user', 'recipient', 'timestamp', 'body')
+        fields = ('id', 'user', 'recipient', 'timestamp', 'body', 'viewed')
 
 
-class UserModelSerializer(ModelSerializer):
+class ChatUserModelSerializer(ModelSerializer):
+    has_conversation = SerializerMethodField()
+    online = SerializerMethodField()
+
+    def get_has_conversation(self, instance):
+        user = self.context.get('request').user
+        return MessageModel.objects.filter(user=user, recipient=instance).exists()
+
+    def get_online(self, instance):
+        if(instance.status):
+            return instance.status.online
+        else:
+            return False
+
     class Meta:
         model = User
-        fields = ('username',)
+        fields = ('id', 'username', 'has_conversation', 'online')
