@@ -53,7 +53,9 @@ class MessageModel(Model):
         event = {
             'type': 'recieve_group_message',
             'message': {"type": "message",
-                        "id": "%s" % (self.id)
+                        "id": "%s" % (self.id),
+                        "initiator": "%s" % (self.user.id),
+                        "initiator_name": "%s" % (self.user.username)
             }
         }
 
@@ -98,12 +100,11 @@ class Status(Model):
         return "%s - %s" % (self.id, self.online)
 
 
-    def notify_ws_client(self):
+    def notify_ws_client(self, instance=None):
         """
         Used to notify other users that this
         user is online now.
         """
-        print("notify ws client begins")
         contacted_user_ids = MessageModel.objects.filter(
             user=self.user).order_by('recipient').distinct('recipient').values_list('recipient__id', flat=True)
         print("contacted user are %s" % contacted_user_ids)
@@ -115,7 +116,7 @@ class Status(Model):
                     'message': {
                         'type': 'status',
                         'user_id': self.id,
-                        'online': self.online
+                        'online': self.online if instance is None else instance.online
                     }
                 }
                 async_to_sync(channel_layer.group_send)("%s" % (user_id), event)
@@ -126,11 +127,12 @@ class Status(Model):
         super(Status, self).save(*args, **kwargs)
         if new is None:
             print("notifying inside sa5Ave method")
-            self.notify_ws_client()
+            self.notify_ws_client(instance=None)
 
     class Meta:
         verbose_name = "Status"
         verbose_name_plural = "Status"
+
 
 @receiver(pre_save, sender=Status)
 def call_ws_client(sender, instance, raw, using, update_fields, **kwargs):
@@ -139,12 +141,10 @@ def call_ws_client(sender, instance, raw, using, update_fields, **kwargs):
         # this instance is saved in the
         # status model.
         previous_status = Status.objects.get(id=instance.id)
-        print("previous status is %s and current_status is %s" % (previous_status.online, instance.online))
         if previous_status.online is instance.online:
             pass
         else:
-            print("notifying inside pre_save")
-            instance.notify_ws_client()
+            instance.notify_ws_client(instance=instance)
     else:
         # notfication will be handle
         # in the save method of the model.

@@ -9,15 +9,17 @@ function updateUserList() {
         userList.children('.user').remove();
         for (let i = 0; i < data.length; i++) {
 	    let btn_class = "btn btn-danger btn-sm"
+	    let status = "Offline"
 	    if(data[i]['online']){
-		btn_class = "btn btn-success btn-sm"
+		btn_class = "btn btn-success btn-sm";
+		status = "Online";
 	    }
-            const userItem = `<a class="list-group-item user" data-username="${data[i]['id']}">${data[i]['username']}
+            const userItem = `<a class="list-group-item user" data-userid="${data[i]['id']}">${data[i]['username']}
 		  <button
 	    type="button"
 	    id="user_${data[i]['id']}"
 	    class="${btn_class}"
-	    style="float:right;">offline</button>
+	    style="float:right;">${status}</button>
 		</a>`;
             $(userItem).appendTo('#user-list');
         }
@@ -25,7 +27,7 @@ function updateUserList() {
             userList.children('.active').removeClass('active');
             let selected = event.target;
             $(selected).addClass('active');
-            setCurrentRecipient(selected.getAttribute("data-username"));
+            setCurrentRecipient(selected.getAttribute("data-userid"));
         });
     });
 }
@@ -39,7 +41,7 @@ function drawMessage(message) {
     if (message.user === currentUser) position = 'right';
     const messageItem = `
             <li class="message ${position}">
-                <div class="avatar">${message.user}</div>
+                <div class="avatar">${message.initiator}</div>
                     <div class="text_wrapper">
                         <div class="text">${message.body}<br>
                             <span class="small">${date}</span>
@@ -113,9 +115,9 @@ function updateOnlineOfflineStatus(user_id, status){
     if(status == "online"){
 	try{
 	    let user_anchor_element = document.getElementById(`user_${user_id}`)
-	    
 	}
 	catch(e){
+	    alert(e)
 	}
     }
 }
@@ -150,9 +152,15 @@ $(document).ready(function () {
 	// and display it in the message window.
 	let data = JSON.parse(e.data)
 	if(data.message.type == "message"){
-            getMessageById(data.message.id);
+	    if(currentUser != data.message.initiator && data.message.initiator != currentRecipient){
+		$.alert({
+		    title: 'Notification',
+		    content: `New Message from ${data.message.initiator_name}`,
+		});
+	    }
+	    getMessageById(data.message.id);
 	}
-	else{
+	else if(data.message.type == "status"){
 	    if(data.message.type="status"){
 		if(data.message.online){
 		    status_button = document.getElementById(`user_${data.message.user_id}`);

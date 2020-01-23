@@ -45,7 +45,7 @@
   </div>
   <script>
     let sessionKey = '{{ request.session.session_key }}';
-    let currentUser = '{{ request.user.username }}';
+    let currentUser = '{{ request.user.id }}';
   </script>
   <script src="{% static 'js/app.js' %}"></script>
   {% endblock %}
