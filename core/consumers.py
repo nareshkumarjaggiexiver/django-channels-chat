@@ -89,4 +89,3 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Status.DoesNotExist:
             Status.objects.create(user=User.objects.get(id=user_id),
                             online=online)
-    
